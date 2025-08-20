@@ -1,101 +1,166 @@
 package com.example.foodndeliv.controller;
 
-import com.example.foodndeliv.dto.DeliveryAssignmentRequest;
 import com.example.foodndeliv.entity.OrderDelivery;
-import com.example.foodndeliv.entity.Rider;
 import com.example.foodndeliv.repository.OrderDeliveryRepository;
 import com.example.foodndeliv.repository.RiderRepository;
 import com.example.foodndeliv.types.DeliveryStatus;
 import com.example.foodndeliv.types.RiderStatus;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.rest.webmvc.PersistentEntityResource;
-import org.springframework.data.rest.webmvc.PersistentEntityResourceAssembler;
-import org.springframework.data.rest.webmvc.RepositoryRestController;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 
-@RepositoryRestController
+/**
+ * Command-style endpoints (separate from the Spring Data REST CRUD) to enforce invariants:
+ *  - INACTIVE riders cannot be assigned to deliveries
+ *  - Delivery history is preserved (no command to set UNASSIGNED or to delete)
+ *
+ * Paths are explicit under /api to make the contract clear and easy to test with curl/Postman.
+ */
+@RestController
+@RequestMapping("/api/deliveries")
+@Validated
 public class DeliveryCommandController {
 
-    private final OrderDeliveryRepository deliveryRepo;
-    private final RiderRepository riderRepo;
+    private final OrderDeliveryRepository deliveries;
+    private final RiderRepository riders;
 
-    @Autowired
-    public DeliveryCommandController(OrderDeliveryRepository deliveryRepo, RiderRepository riderRepo) {
-        this.deliveryRepo = deliveryRepo;
-        this.riderRepo = riderRepo;
+    public DeliveryCommandController(OrderDeliveryRepository deliveries, RiderRepository riders) {
+        this.deliveries = deliveries;
+        this.riders = riders;
+    }
+
+    // ---------- DTOs ----------
+
+    public static final class AssignRequest {
+        @NotNull
+        @JsonProperty("riderId")
+        public Long riderId;
+    }
+
+    public static final class StatusRequest {
+        @NotNull
+        @JsonProperty("status")
+        public DeliveryStatus status;
+    }
+
+    // ---------- Commands ----------
+
+    /**
+     * Assign a delivery to an ACTIVE rider.
+     * Allowed only from UNASSIGNED -> ASSIGNED.
+     *
+     * Example:
+     *   PATCH /api/deliveries/{id}/assign
+     *   { "riderId": 8 }
+     */
+    @PatchMapping("/{id}/assign")
+    @Transactional
+    public ResponseEntity<?> assign(@PathVariable Long id, @Valid @RequestBody AssignRequest body) {
+        OrderDelivery d = deliveries.findById(id)
+                .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "Delivery not found"));
+
+        if (d.getStatus() != DeliveryStatus.UNASSIGNED) {
+            throw new ApiError(HttpStatus.UNPROCESSABLE_ENTITY, "Only UNASSIGNED deliveries can be assigned");
+        }
+
+        var rider = riders.findById(body.riderId)
+                .orElseThrow(() -> new ApiError(HttpStatus.UNPROCESSABLE_ENTITY, "Rider not found"));
+
+        if (rider.getStatus() == RiderStatus.INACTIVE) {
+            // Business conflict: rider exists but is not eligible
+            throw new ApiError(HttpStatus.CONFLICT, "Cannot assign to INACTIVE rider");
+        }
+
+        d.setRider(rider);
+        d.setStatus(DeliveryStatus.ASSIGNED);
+        if (d.getAssignedAt() == null) {
+            d.setAssignedAt(Instant.now());
+        }
+
+        deliveries.save(d);
+        return ResponseEntity.noContent().build(); // 204
     }
 
     /**
-     * Command endpoint to drive delivery lifecycle with invariants:
-     *  - UNASSIGNED -> ASSIGNED (requires ACTIVE rider)
-     *  - ASSIGNED   -> DELIVERED
-     *
-     * Full path at runtime: POST /api/deliveries/{id}/assign
-     * NOTE: We do NOT allow setting UNASSIGNED here to preserve traceability.
+     * Convenience variant using query param if you ever want to bypass JSON binding:
+     *   PATCH /api/deliveries/{id}/assign?riderId=8
      */
-    @PostMapping(path = "/deliveries/{id}/assign", consumes = "application/json")
+    @PatchMapping(value = "/{id}/assign", params = "riderId")
     @Transactional
-    public ResponseEntity<PersistentEntityResource> assign(
-            @PathVariable Long id,
-            @Valid @RequestBody DeliveryAssignmentRequest req,
-            PersistentEntityResourceAssembler assembler) {
+    public ResponseEntity<?> assignWithParam(@PathVariable Long id, @RequestParam Long riderId) {
+        AssignRequest req = new AssignRequest();
+        req.riderId = riderId;
+        return assign(id, req);
+    }
 
-        OrderDelivery d = deliveryRepo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Delivery not found"));
+    /**
+     * Update delivery status.
+     * Allowed transition:
+     *   ASSIGNED -> DELIVERED (sets deliveredAt)
+     * Disallowed through this command:
+     *   any attempt to set UNASSIGNED (history must be preserved)
+     *
+     * Example:
+     *   PATCH /api/deliveries/{id}/status
+     *   { "status": "DELIVERED" }
+     */
+    @PatchMapping("/{id}/status")
+    @Transactional
+    public ResponseEntity<?> updateStatus(@PathVariable Long id, @Valid @RequestBody StatusRequest body) {
+        OrderDelivery d = deliveries.findById(id)
+                .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "Delivery not found"));
 
-        DeliveryStatus current = d.getStatus();
-        DeliveryStatus target = req.getStatus();
+        DeliveryStatus target = body.status;
 
-        switch (target) {
-            case ASSIGNED -> {
-                // Only allow from UNASSIGNED
-                if (current != DeliveryStatus.UNASSIGNED) {
-                    throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                            "Only UNASSIGNED deliveries can be assigned");
-                }
-                Long riderId = req.getRiderId();
-                if (riderId == null) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "riderId is required when status=ASSIGNED");
-                }
-                Rider r = riderRepo.findById(riderId)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Rider not found"));
-                if (r.getStatus() == RiderStatus.INACTIVE) {
-                    throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                            "INACTIVE riders cannot be assigned to deliveries");
-                }
-
-                d.setRider(r);
-                d.setStatus(DeliveryStatus.ASSIGNED);
-                // business timestamp if your entity includes it
-                try { d.setAssignedAt(Instant.now()); } catch (NoSuchMethodError | Exception ignored) {}
-            }
-            case DELIVERED -> {
-                // Only allow from ASSIGNED
-                if (current != DeliveryStatus.ASSIGNED) {
-                    throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                            "Only ASSIGNED deliveries can be marked DELIVERED");
-                }
-                d.setStatus(DeliveryStatus.DELIVERED);
-                // business timestamp if your entity includes it
-                try { d.setDeliveredAt(Instant.now()); } catch (NoSuchMethodError | Exception ignored) {}
-            }
-            case UNASSIGNED -> {
-                // Disallow making things UNASSIGNED via this endpoint
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                        "Setting UNASSIGNED is not supported via this command");
-            }
-            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported status: " + target);
+        if (target == DeliveryStatus.UNASSIGNED) {
+            throw new ApiError(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "UNASSIGNED cannot be set via command; history must be preserved");
         }
 
-        OrderDelivery saved = deliveryRepo.save(d);
-        return ResponseEntity.ok(assembler.toModel(saved)); // 200 OK + HAL body
+        if (target == DeliveryStatus.DELIVERED) {
+            if (d.getStatus() != DeliveryStatus.ASSIGNED) {
+                throw new ApiError(HttpStatus.UNPROCESSABLE_ENTITY,
+                        "Only ASSIGNED deliveries can be marked DELIVERED");
+            }
+            d.setStatus(DeliveryStatus.DELIVERED);
+            if (d.getDeliveredAt() == null) {
+                d.setDeliveredAt(Instant.now());
+            }
+            deliveries.save(d);
+            return ResponseEntity.noContent().build(); // 204
+        }
+
+        // If we reach here, the requested status is not supported via this command
+        throw new ApiError(HttpStatus.BAD_REQUEST, "Unsupported status transition: " + target);
+    }
+
+    // ---------- Simple typed exception for concise rule errors ----------
+
+    @ResponseStatus
+    static class ApiError extends RuntimeException {
+        private final HttpStatus status;
+
+        ApiError(HttpStatus status, String message) {
+            super(message);
+            this.status = status;
+        }
+
+        public HttpStatus getStatus() {
+            return status;
+        }
+    }
+
+    // Optionally, turn ApiError into proper HTTP responses without a full @ControllerAdvice:
+    @ExceptionHandler(ApiError.class)
+    public ResponseEntity<?> handleApiError(ApiError e) {
+        return ResponseEntity.status(e.getStatus())
+                .body(e.getMessage());
     }
 }
