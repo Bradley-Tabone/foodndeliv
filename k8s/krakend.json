@@ -1,0 +1,45 @@
+{
+  "version": 3,
+  "name": "foodndeliv-gw",
+  "port": 8080,
+  "timeout": "3000ms",
+  "cache_ttl": "300s",
+  "telemetry/logging": { "level": "INFO" },
+
+  "endpoints": [
+    {
+      "endpoint": "/api/orders/{username}",
+      "method": "GET",
+      "backend": [
+        {
+          "host": ["http://foodndeliv:8080"],
+          "url_pattern": "/api/orders/{username}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/fnd/protocol/openid-connect/certs",
+          "issuer": "http://keycloak:8080/realms/fnd"
+        }
+      }
+    },
+    {
+      "endpoint": "/api/deliveries",
+      "method": "GET",
+      "backend": [
+        {
+          "host": ["http://foodndeliv:8080"],
+          "url_pattern": "/api/deliveries"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/fnd/protocol/openid-connect/certs",
+          "issuer": "http://keycloak:8080/realms/fnd"
+        }
+      }
+    }
+  ]
+}

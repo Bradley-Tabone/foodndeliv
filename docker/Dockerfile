@@ -2,7 +2,7 @@ FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 COPY target/foodndeliv-0.0.1-SNAPSHOT.jar /app/foodndeliv.jar
-COPY opentelemetry-javaagent.jar /app/opentelemetry-javaagent.jar
+COPY docker/opentelemetry-javaagent.jar /app/opentelemetry-javaagent.jar
 EXPOSE 8080
 
 ENV JAVA_AGENT=""

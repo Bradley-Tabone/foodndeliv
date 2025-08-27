@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: krakend
+  namespace: fnd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: krakend
+  template:
+    metadata:
+      labels:
+        app: krakend
+    spec:
+      # prevent K8s from injecting PORT=tcp://... and other *_SERVICE_* envs
+      enableServiceLinks: false
+      containers:
+        - name: krakend
+          image: devopsfaith/krakend:2.5
+          # listen on 0.0.0.0:8080; do not rely on any injected PORT
+          command: ["/bin/sh","-c"]
+          args:
+            - |
+              export KRAKEND_LISTEN_ADDRESS="0.0.0.0:8080";
+              exec krakend run -c /etc/krakend/krakend.json
+          ports:
+            - containerPort: 8080
+          env:
+            # belt-and-suspenders: explicitly set PORT to a plain integer string
+            - name: PORT
+              value: "8080"
+          volumeMounts:
+            - name: cfg
+              mountPath: /etc/krakend
+          readinessProbe:
+            httpGet:
+              path: /__health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: cfg
+          configMap:
+            name: krakend-config
+
