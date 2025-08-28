@@ -39,46 +39,37 @@ public class OrderService {
 
     @Transactional
     public OrderResponseDTO createOrder(OrderRequestDTO orderRequestDTO) {
-        
 
         String custId = request.getHeader("X-Custid");
+        System.out.println("CreateOrder Custid: " + custId);
 
-        //Test
-        System.out.println("CreateOrder Custid: "+custId);
+        // Toggle: enforce invariants only when security is enabled
+        boolean enforceDomainInvariant = false; // Task 2a = false, Task 2b/3 = true
 
-        if(custId != null)
-        {
-                //Check JWT ID matches Oder
-                if(custId == null || !custId.equals(orderRequestDTO.customerId().toString())) 
-                {
-                        throw new DomainInvariantException("Only orders on own behalf are accepted");
-                }
-        } else {
-                // Halt due to missing JWT id
+        if (enforceDomainInvariant) {
+                if (custId == null || !custId.equals(orderRequestDTO.customerId().toString())) {
                 throw new DomainInvariantException("Only orders on own behalf are accepted");
+                }
         }
-       
-              
+
         Customer customer = customerRepository.findById(orderRequestDTO.customerId())
                 .orElseThrow(() -> new DomainInvariantException("Customer not found"));
         Restaurant restaurant = restaurantRepository.findById(orderRequestDTO.restaurantId())
                 .orElseThrow(() -> new DomainInvariantException("Restaurant not found"));
 
-        if( customer.getState() != CustomerState.ACTIVE ) {
+        if (customer.getState() != CustomerState.ACTIVE) {
                 throw new DomainInvariantException("Inactive Customer");
         } else if (restaurant.getState() != RestaurantState.OPEN) {
                 throw new DomainInvariantException("Restaurant is currently closed");
         }
-        
+
         Order order = new Order();
         order.setCustomer(customer);
         order.setRestaurant(restaurant);
         order.setState(OrderState.OPEN);
 
         List<OrderLine> orderLines = new ArrayList<>();
-
-        for(OrderLineDTO orderlineto : orderRequestDTO.orderLines())
-        {
+        for (OrderLineDTO orderlineto : orderRequestDTO.orderLines()) {
                 orderLines.add(modelMapper.map(orderlineto, OrderLine.class));
         }
 
@@ -90,6 +81,7 @@ public class OrderService {
         return modelMapper.map(newOrder, OrderResponseDTO.class);
     }
 
+
     @Transactional(readOnly = true)
     public List<OrderResponseDTO> getAllOrders() {
 
@@ -99,6 +91,18 @@ public class OrderService {
         {
                 retOrders.add(modelMapper.map(order, OrderResponseDTO.class));
         }
+        return retOrders;
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderResponseDTO> getOrdersByUsername(String username) {
+        List<OrderResponseDTO> retOrders = new ArrayList<>();
+
+        // call the repository method (we rewrote it earlier to return List<Order>)
+        for (Order order : orderRepository.findByCustomerName(username)) {
+            retOrders.add(modelMapper.map(order, OrderResponseDTO.class));
+        }
+
         return retOrders;
     }
 }

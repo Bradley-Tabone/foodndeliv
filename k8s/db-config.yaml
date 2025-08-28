@@ -2,8 +2,8 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: db-config
+  namespace: fnd
 data:
-  DB_HOST: postgres
-  DB_PORT: "5432"
   DB_NAME: ordersdb
-
+  DB_PORT: "5432"
+  DB_HOST: postgres
