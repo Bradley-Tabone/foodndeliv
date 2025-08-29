@@ -7,32 +7,33 @@ data:
   krakend.json: |
     {
       "version": 3,
-      "name": "foodndeliv-gw",
+      "name": "FoodnDeliv API Gateway",
       "port": 8080,
       "timeout": "3000ms",
       "cache_ttl": "300s",
-      "extra_config": {
-        "telemetry/logging": {
-          "level": "INFO"
-        }
-      },
+      "telemetry/logging": { "level": "DEBUG" },
+
       "endpoints": [
         {
           "endpoint": "/api/orders/{username}",
           "method": "GET",
           "backend": [
             {
-              "host": ["http://foodndeliv.fnd.svc.cluster.local:8080"],
-              "url_pattern": "/api/orders/{username}"
+              "url_pattern": "/api/orders/{username}",
+              "host": ["http://foodndeliv:8080"]
             }
           ],
           "extra_config": {
-            "auth/validator": {
+            "github.com/devopsfaith/krakend-jose/validator": {
               "alg": "RS256",
-              "jwk_url": "http://keycloak.fnd.svc.cluster.local:8080/realms/fnd/protocol/openid-connect/certs",
+              "jwk-url": "http://keycloak.fnd.svc.cluster.local:8180/realms/fnd/protocol/openid-connect/certs",
+              "issuer": "http://keycloak:8180/realms/fnd",
+              "disable_jwk_security": true,
+              "disable_audience_validation": true,
+              "cache": true,
+              "operation_debug": true,
               "roles_key": "realm_access.roles",
-              "roles": ["admin", "customer"],
-              "cache": true
+              "roles": ["admin", "customer"]
             },
             "validation/cel": {
               "expressions": [
@@ -44,26 +45,24 @@ data:
             }
           }
         },
-
         {
           "endpoint": "/api/deliveries",
           "method": "GET",
           "backend": [
             {
-              "host": ["http://foodndeliv.fnd.svc.cluster.local:8080"],
-              "url_pattern": "/api/deliveries"
+              "url_pattern": "/api/deliveries",
+              "host": ["http://foodndeliv:8080"]
             }
           ],
           "extra_config": {
-            "auth/validator": {
-              "alg": "RS256",
-              "jwk_url": "http://keycloak.fnd.svc.cluster.local:8080/realms/fnd/protocol/openid-connect/certs",
-              "roles_key": "realm_access.roles",
-              "roles": ["admin", "rider"],
-              "cache": true
+            "auth/introspection": {
+              "endpoint": "http://keycloak.fnd.svc.cluster.local:8180/realms/fnd/protocol/openid-connect/token/introspect",
+              "client_id": "foodndeliv-api",
+              "client_secret": "LGMw1izQHxxxCO82En83idRAImLtdWDt",
+              "cache": true,
+              "operation_debug": true
             }
           }
         }
       ]
     }
-

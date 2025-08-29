@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: krakend
   namespace: fnd
+  labels:
+    app: krakend
 spec:
   replicas: 1
   selector:
@@ -13,34 +15,49 @@ spec:
       labels:
         app: krakend
     spec:
-      # prevent K8s from injecting PORT=tcp://... and other *_SERVICE_* envs
-      enableServiceLinks: false
       containers:
         - name: krakend
           image: devopsfaith/krakend:2.5
-          # listen on 0.0.0.0:8080; do not rely on any injected PORT
-          command: ["/bin/sh","-c"]
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
           args:
-            - |
-              export KRAKEND_LISTEN_ADDRESS="0.0.0.0:8080";
+            - export KRAKEND_LISTEN_ADDRESS="0.0.0.0:8080";
               exec krakend run -c /etc/krakend/krakend.json
           ports:
             - containerPort: 8080
-          env:
-            # belt-and-suspenders: explicitly set PORT to a plain integer string
-            - name: PORT
-              value: "8080"
           volumeMounts:
-            - name: cfg
-              mountPath: /etc/krakend
+            - name: krakend-config
+              mountPath: /etc/krakend/krakend.json
+              subPath: krakend.json
           readinessProbe:
             httpGet:
               path: /__health
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /__health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
       volumes:
-        - name: cfg
+        - name: krakend-config
           configMap:
             name: krakend-config
-
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: krakend
+  namespace: fnd
+  labels:
+    app: krakend
+spec:
+  selector:
+    app: krakend
+  ports:
+    - protocol: TCP
+      port: 8380        # external service port you’ll call
+      targetPort: 8080  # container port KrakenD listens on
+  type: LoadBalancer

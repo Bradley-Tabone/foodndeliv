@@ -19,8 +19,19 @@
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://keycloak:8080/realms/fnd/protocol/openid-connect/certs",
-          "issuer": "http://keycloak:8080/realms/fnd"
+          "jwk_url": "http://keycloak.fnd.svc.cluster.local:8180/realms/fnd/protocol/openid-connect/certs",
+          "issuer": "http://keycloak:8180/realms/fnd",
+          "roles_key": "realm_access.roles",
+          "roles": ["admin", "customer"],
+          "cache": true
+        },
+        "validation/cel": {
+          "expressions": [
+            {
+              "check_expr": "jwt.claims.preferred_username == request.params.username || has(jwt.claims['realm_access'].roles, 'admin')",
+              "error": "forbidden: wrong user"
+            }
+          ]
         }
       }
     },
@@ -36,8 +47,11 @@
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://keycloak:8080/realms/fnd/protocol/openid-connect/certs",
-          "issuer": "http://keycloak:8080/realms/fnd"
+          "jwk_url": "http://keycloak.fnd.svc.cluster.local:8180/realms/fnd/protocol/openid-connect/certs",
+          "issuer": "http://keycloak:8180/realms/fnd",
+          "roles_key": "realm_access.roles",
+          "roles": ["admin", "rider"],
+          "cache": true
         }
       }
     }
