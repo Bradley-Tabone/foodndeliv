@@ -10,7 +10,7 @@
     {
       "endpoint": "/api/customers",
       "method": "GET",
-      "output_encoding": "json",
+      "output_encoding": "no-op",
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
@@ -26,16 +26,22 @@
         {
           "url_pattern": "/api/customers",
           "host": ["http://foodndeliv:8080"],
-          "encoding": "json",
-          "method": "GET"
+          "method": "GET",
+          "encoding": "no-op",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "enabled",
+              "return_error_details_as_response": true
+            }
+          }
         }
       ]
     },
     {
       "endpoint": "/api/customers",
       "method": "POST",
-      "output_encoding": "json",
-      "input_headers": ["Content-Type"],
+      "output_encoding": "no-op",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
@@ -51,15 +57,22 @@
         {
           "url_pattern": "/api/customers",
           "host": ["http://foodndeliv:8080"],
-          "encoding": "json",
-          "method": "POST"
+          "method": "POST",
+          "encoding": "no-op",
+          "input_headers": ["Authorization", "Content-Type"],
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "enabled",
+              "return_error_details_as_response": true
+            }
+          }
         }
       ]
     },
     {
       "endpoint": "/api/restaurants",
       "method": "GET",
-      "output_encoding": "json",
+      "output_encoding": "no-op",
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
@@ -75,16 +88,22 @@
         {
           "url_pattern": "/api/restaurants",
           "host": ["http://foodndeliv:8080"],
-          "encoding": "json",
-          "method": "GET"
+          "method": "GET",
+          "encoding": "no-op",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "enabled",
+              "return_error_details_as_response": true
+            }
+          }
         }
       ]
     },
     {
       "endpoint": "/api/restaurants",
       "method": "POST",
-      "output_encoding": "json",
-      "input_headers": ["Content-Type"],
+      "output_encoding": "no-op",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
@@ -100,15 +119,22 @@
         {
           "url_pattern": "/api/restaurants",
           "host": ["http://foodndeliv:8080"],
-          "encoding": "json",
-          "method": "POST"
+          "method": "POST",
+          "encoding": "no-op",
+          "input_headers": ["Authorization", "Content-Type"],
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "enabled",
+              "return_error_details_as_response": true
+            }
+          }
         }
       ]
     },
     {
       "endpoint": "/api/orders",
       "method": "GET",
-      "output_encoding": "json",
+      "output_encoding": "no-op",
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
@@ -124,16 +150,22 @@
         {
           "url_pattern": "/api/orders",
           "host": ["http://foodndeliv:8080"],
-          "encoding": "json",
-          "method": "GET"
+          "method": "GET",
+          "encoding": "no-op",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "enabled",
+              "return_error_details_as_response": true
+            }
+          }
         }
       ]
     },
     {
       "endpoint": "/api/orders",
       "method": "POST",
-      "output_encoding": "json",
-      "input_headers": ["Content-Type"],
+      "output_encoding": "no-op",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
@@ -149,15 +181,22 @@
         {
           "url_pattern": "/api/orders",
           "host": ["http://foodndeliv:8080"],
-          "encoding": "json",
-          "method": "POST"
+          "method": "POST",
+          "encoding": "no-op",
+          "input_headers": ["Authorization", "Content-Type"],
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "enabled",
+              "return_error_details_as_response": true
+            }
+          }
         }
       ]
     },
     {
       "endpoint": "/api/deliveries",
       "method": "GET",
-      "output_encoding": "json",
+      "output_encoding": "no-op",
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
@@ -173,16 +212,22 @@
         {
           "url_pattern": "/api/deliveries",
           "host": ["http://foodndeliv:8080"],
-          "encoding": "json",
-          "method": "GET"
+          "method": "GET",
+          "encoding": "no-op",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "enabled",
+              "return_error_details_as_response": true
+            }
+          }
         }
       ]
     },
     {
       "endpoint": "/api/deliveries",
       "method": "POST",
-      "output_encoding": "json",
-      "input_headers": ["Content-Type"],
+      "output_encoding": "no-op",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
@@ -198,15 +243,22 @@
         {
           "url_pattern": "/api/deliveries",
           "host": ["http://foodndeliv:8080"],
-          "encoding": "json",
-          "method": "POST"
+          "method": "POST",
+          "encoding": "no-op",
+          "input_headers": ["Authorization", "Content-Type"],
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "enabled",
+              "return_error_details_as_response": true
+            }
+          }
         }
       ]
     },
     {
       "endpoint": "/api/riders",
       "method": "GET",
-      "output_encoding": "json",
+      "output_encoding": "no-op",
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
@@ -222,16 +274,22 @@
         {
           "url_pattern": "/api/riders",
           "host": ["http://foodndeliv:8080"],
-          "encoding": "json",
-          "method": "GET"
+          "method": "GET",
+          "encoding": "no-op",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "enabled",
+              "return_error_details_as_response": true
+            }
+          }
         }
       ]
     },
     {
       "endpoint": "/api/riders",
       "method": "POST",
-      "output_encoding": "json",
-      "input_headers": ["Content-Type"],
+      "output_encoding": "no-op",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
@@ -247,8 +305,15 @@
         {
           "url_pattern": "/api/riders",
           "host": ["http://foodndeliv:8080"],
-          "encoding": "json",
-          "method": "POST"
+          "method": "POST",
+          "encoding": "no-op",
+          "input_headers": ["Authorization", "Content-Type"],
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "enabled",
+              "return_error_details_as_response": true
+            }
+          }
         }
       ]
     }
