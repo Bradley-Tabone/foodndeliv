@@ -20,15 +20,20 @@ spec:
             - containerPort: 5432
           envFrom:
             - secretRef:
-                name: db-app-secret
+                name: db-super-secret
             - configMapRef:
                 name: db-config
           volumeMounts:
             - name: pgdata
               mountPath: /var/lib/postgresql/data
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.d
       volumes:
         - name: pgdata
           emptyDir: {}
+        - name: init-sql
+          configMap:
+            name: postgres-init-sql
 ---
 apiVersion: v1
 kind: Service

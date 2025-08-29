@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fnd-api
+  namespace: fnd
+  labels:
+    app: krakend
+spec:
+  type: LoadBalancer
+  selector:
+    app: krakend
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

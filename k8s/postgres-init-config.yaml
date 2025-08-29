@@ -2,10 +2,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: postgres-init-sql
+  namespace: fnd
 data:
   init.sql: |
-    CREATE USER myuser WITH PASSWORD 'userpass';
-    GRANT ALL PRIVILEGES ON DATABASE ordersdb TO myuser;
-    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO myuser;
-    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO myuser;
-    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO myuser;
+    CREATE USER myadmin WITH ENCRYPTED PASSWORD 'mypass';
+    CREATE DATABASE ordersdb OWNER myadmin;
+    GRANT ALL PRIVILEGES ON DATABASE ordersdb TO myadmin;

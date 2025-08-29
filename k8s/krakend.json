@@ -1,45 +1,256 @@
 {
+  "$schema": "https://www.krakend.io/schema/v2.7/krakend.json",
   "version": 3,
-  "name": "foodndeliv-gw",
+  "name": "FoodnDeliv - API Gateway",
   "port": 8080,
   "timeout": "3000ms",
   "cache_ttl": "300s",
-  "telemetry/logging": { "level": "INFO" },
 
   "endpoints": [
     {
-      "endpoint": "/api/orders/{username}",
+      "endpoint": "/api/customers",
       "method": "GET",
-      "backend": [
-        {
-          "host": ["http://foodndeliv:8080"],
-          "url_pattern": "/api/orders/{username}"
-        }
-      ],
+      "output_encoding": "json",
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://keycloak:8080/realms/fnd/protocol/openid-connect/certs",
-          "issuer": "http://keycloak:8080/realms/fnd"
+          "jwk_url": "http://keycloak:80/realms/fnd/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "roles_key": "realm_access.roles",
+          "roles_key_is_nested": true,
+          "roles": ["customer", "admin"],
+          "audience": []
         }
-      }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/customers",
+          "host": ["http://foodndeliv:8080"],
+          "encoding": "json",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/customers",
+      "method": "POST",
+      "output_encoding": "json",
+      "input_headers": ["Content-Type"],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:80/realms/fnd/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "roles_key": "realm_access.roles",
+          "roles_key_is_nested": true,
+          "roles": ["customer", "admin"],
+          "audience": []
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/customers",
+          "host": ["http://foodndeliv:8080"],
+          "encoding": "json",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/restaurants",
+      "method": "GET",
+      "output_encoding": "json",
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:80/realms/fnd/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "roles_key": "realm_access.roles",
+          "roles_key_is_nested": true,
+          "roles": ["admin"],
+          "audience": []
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/restaurants",
+          "host": ["http://foodndeliv:8080"],
+          "encoding": "json",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/restaurants",
+      "method": "POST",
+      "output_encoding": "json",
+      "input_headers": ["Content-Type"],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:80/realms/fnd/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "roles_key": "realm_access.roles",
+          "roles_key_is_nested": true,
+          "roles": ["admin"],
+          "audience": []
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/restaurants",
+          "host": ["http://foodndeliv:8080"],
+          "encoding": "json",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/orders",
+      "method": "GET",
+      "output_encoding": "json",
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:80/realms/fnd/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "roles_key": "realm_access.roles",
+          "roles_key_is_nested": true,
+          "roles": ["customer", "admin"],
+          "audience": []
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/orders",
+          "host": ["http://foodndeliv:8080"],
+          "encoding": "json",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/orders",
+      "method": "POST",
+      "output_encoding": "json",
+      "input_headers": ["Content-Type"],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:80/realms/fnd/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "roles_key": "realm_access.roles",
+          "roles_key_is_nested": true,
+          "roles": ["customer", "admin"],
+          "audience": []
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/orders",
+          "host": ["http://foodndeliv:8080"],
+          "encoding": "json",
+          "method": "POST"
+        }
+      ]
     },
     {
       "endpoint": "/api/deliveries",
       "method": "GET",
-      "backend": [
-        {
-          "host": ["http://foodndeliv:8080"],
-          "url_pattern": "/api/deliveries"
-        }
-      ],
+      "output_encoding": "json",
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://keycloak:8080/realms/fnd/protocol/openid-connect/certs",
-          "issuer": "http://keycloak:8080/realms/fnd"
+          "jwk_url": "http://keycloak:80/realms/fnd/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "roles_key": "realm_access.roles",
+          "roles_key_is_nested": true,
+          "roles": ["admin", "rider"],
+          "audience": []
         }
-      }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/deliveries",
+          "host": ["http://foodndeliv:8080"],
+          "encoding": "json",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/deliveries",
+      "method": "POST",
+      "output_encoding": "json",
+      "input_headers": ["Content-Type"],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:80/realms/fnd/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "roles_key": "realm_access.roles",
+          "roles_key_is_nested": true,
+          "roles": ["admin", "rider"],
+          "audience": []
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/deliveries",
+          "host": ["http://foodndeliv:8080"],
+          "encoding": "json",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/riders",
+      "method": "GET",
+      "output_encoding": "json",
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:80/realms/fnd/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "roles_key": "realm_access.roles",
+          "roles_key_is_nested": true,
+          "roles": ["admin", "rider"],
+          "audience": []
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/riders",
+          "host": ["http://foodndeliv:8080"],
+          "encoding": "json",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/riders",
+      "method": "POST",
+      "output_encoding": "json",
+      "input_headers": ["Content-Type"],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:80/realms/fnd/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "roles_key": "realm_access.roles",
+          "roles_key_is_nested": true,
+          "roles": ["admin", "rider"],
+          "audience": []
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/riders",
+          "host": ["http://foodndeliv:8080"],
+          "encoding": "json",
+          "method": "POST"
+        }
+      ]
     }
   ]
 }
