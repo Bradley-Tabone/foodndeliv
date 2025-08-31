@@ -20,7 +20,7 @@ spec:
             - containerPort: 5432
           envFrom:
             - secretRef:
-                name: db-super-secret
+                name: db-app-secret
             - configMapRef:
                 name: db-config
           volumeMounts:

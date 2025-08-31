@@ -74,3 +74,24 @@ scenarios:
             Authorization: "Bearer {{ $env.RIDER_TOKEN }}"
           expect:
             - statusCode: 200
+
+  - name: "Customer logs out and token becomes invalid"
+    flow:
+      - post:
+          url: "/realms/fnd/protocol/openid-connect/logout"
+          headers:
+            Content-Type: "application/x-www-form-urlencoded"
+          form:
+            client_id: "foodndeliv-api"
+            client_secret: "8xG5hK4y4UnhN5O7NwlboqvwPBtIlg3H"
+            refresh_token: "{{ $env.CUSTOMER_REFRESH }}"
+          expect:
+            - statusCode: 204 
+
+      - get:
+          url: "/api/orders"
+          headers:
+            Authorization: "Bearer {{ $env.CUSTOMER_TOKEN }}"
+          expect:
+            - statusCode: 401
+

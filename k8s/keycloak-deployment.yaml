@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "6"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"keycloak","namespace":"fnd"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"keycloak"}},"template":{"metadata":{"labels":{"app":"keycloak"}},"spec":{"containers":[{"args":["start-dev"],"env":[{"name":"KEYCLOAK_ADMIN","valueFrom":{"secretKeyRef":{"key":"IAM_USERNAME","name":"iam-secret"}}},{"name":"KEYCLOAK_ADMIN_PASSWORD","valueFrom":{"secretKeyRef":{"key":"IAM_PASSWORD","name":"iam-secret"}}}],"image":"quay.io/keycloak/keycloak:24.0.3","name":"keycloak","ports":[{"containerPort":8080}]}]}}}}
+  creationTimestamp: "2025-08-28T12:58:42Z"
+  generation: 6
+  name: keycloak
+  namespace: fnd
+  resourceVersion: "264083"
+  uid: 94e4a770-45a7-423f-bc5d-95e60a4ef4e0
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: keycloak
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2025-08-28T18:15:42+02:00"
+      creationTimestamp: null
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - args:
+        - start-dev
+        env:
+        - name: KEYCLOAK_ADMIN
+          valueFrom:
+            secretKeyRef:
+              key: IAM_USERNAME
+              name: iam-secret
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: IAM_PASSWORD
+              name: iam-secret
+        image: quay.io/keycloak/keycloak:24.0.3
+        imagePullPolicy: IfNotPresent
+        name: keycloak
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2025-08-28T16:52:30Z"
+    lastUpdateTime: "2025-08-28T16:52:30Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2025-08-28T12:58:42Z"
+    lastUpdateTime: "2025-08-28T16:52:30Z"
+    message: ReplicaSet "keycloak-6447bf5dc6" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 6
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1
