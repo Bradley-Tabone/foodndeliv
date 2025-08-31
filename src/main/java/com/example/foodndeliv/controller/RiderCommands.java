@@ -17,18 +17,10 @@ public class RiderCommands {
         this.riders = riders;
     }
 
-    /** DTO for changing rider status */
     public record ChangeRiderStatusDto(String status) { }
 
-    /**
-     * Explicit command to change a rider's status.
-     * Example:
-     *   PATCH /api/riders/7/status
-     *   { "status": "INACTIVE" }
-     */
     @PatchMapping("/{id}/status")
-    public ResponseEntity<?> changeStatus(@PathVariable Long id,
-                                          @RequestBody ChangeRiderStatusDto body) {
+    public ResponseEntity<?> changeStatus(@PathVariable Long id, @RequestBody ChangeRiderStatusDto body) {
         if (body == null || body.status() == null || body.status().isBlank()) {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", "Field 'status' is required (ACTIVE or INACTIVE)."));
@@ -48,7 +40,7 @@ public class RiderCommands {
         }
 
         var rider = riderOpt.get();
-        rider.setStatus(newStatus); // package‑private setter on Rider
+        rider.setStatus(newStatus);
         riders.save(rider);
 
         return ResponseEntity.noContent().build();

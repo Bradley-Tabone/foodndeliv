@@ -44,16 +44,11 @@ public class Rider {
     @Column(name = "phone", nullable = false, unique = true, length = 32)
     private String phone;
 
-    /**
-     * Status is JSON read-only in the auto-exposed repository.
-     * Change via a dedicated command endpoint (same package) calling setStatus(...).
-     */
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 16)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private RiderStatus status;
 
-    /** Auditing / traceability */
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -62,7 +57,6 @@ public class Rider {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    /** Prevent silent clobbering on concurrent edits */
     @Version
     @Column(name = "version", nullable = false)
     private long version;
@@ -75,7 +69,6 @@ public class Rider {
         this.status = status;
     }
 
-    /** Default to ACTIVE only if not provided by the command/controller */
     @PrePersist
     void prePersist() {
         if (this.status == null) {
@@ -96,6 +89,5 @@ public class Rider {
     public void setFullName(String fullName) { this.fullName = fullName; }
     public void setPhone(String phone) { this.phone = phone; }
 
-    /** Package-private by design: mutate only via same-package command controller. */
     void setStatus(RiderStatus status) { this.status = status; }
 }

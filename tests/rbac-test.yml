@@ -1,0 +1,76 @@
+config:
+  target: "http://127.0.0.1:8080"
+  phases:
+    - duration: 30
+      arrivalRate: 2
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Customer creates an order"
+    flow:
+      - post:
+          url: "/api/orders"
+          headers:
+            Authorization: "Bearer {{ $env.CUSTOMER_TOKEN }}"
+          json:
+            customerId: 1
+            restaurantId: 5
+            orderDetails: "Artillery order"
+            state: "PLACED"
+            orderLines:
+              - productName: "Pizza"
+                quantity: 1
+                price: 12.0
+          expect:
+            - statusCode: 201
+
+  - name: "Customer cannot access deliveries"
+    flow:
+      - get:
+          url: "/api/deliveries"
+          headers:
+            Authorization: "Bearer {{ $env.CUSTOMER_TOKEN }}"
+          expect:
+            - statusCode: 403
+
+  - name: "Admin creates restaurant"
+    flow:
+      - post:
+          url: "/api/restaurants"
+          headers:
+            Authorization: "Bearer {{ $env.ADMIN_TOKEN }}"
+          json:
+            name: "TestRestaurant"
+            address: "Artillery Street"
+            state: "OPEN"
+          expect:
+            - statusCode: 201
+
+  - name: "Admin cannot create order"
+    flow:
+      - post:
+          url: "/api/orders"
+          headers:
+            Authorization: "Bearer {{ $env.ADMIN_TOKEN }}"
+          json:
+            customerId: 1
+            restaurantId: 5
+            orderDetails: "Invalid Admin Order"
+            state: "PLACED"
+            orderLines:
+              - productName: "Burger"
+                quantity: 1
+                price: 10.0
+          expect:
+            - statusCode: 403
+
+  - name: "Rider can list deliveries"
+    flow:
+      - get:
+          url: "/api/deliveries"
+          headers:
+            Authorization: "Bearer {{ $env.RIDER_TOKEN }}"
+          expect:
+            - statusCode: 200

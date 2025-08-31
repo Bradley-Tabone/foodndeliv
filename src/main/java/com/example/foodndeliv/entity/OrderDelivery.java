@@ -4,12 +4,18 @@ import com.example.foodndeliv.types.DeliveryStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import org.hibernate.annotations.Check;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+
+@Check(constraints =
+  "(status = 'UNASSIGNED' AND rider_id IS NULL) OR " +
+  "(status IN ('ASSIGNED','DELIVERED') AND rider_id IS NOT NULL)"
+)
 
 @Entity
 @Table(
@@ -27,7 +33,6 @@ public class OrderDelivery {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Reference to an order in the wider system (free-form for Task 1). */
     @NotBlank
     @Column(name = "order_ref", nullable = false, length = 64)
     private String orderRef;
@@ -40,28 +45,21 @@ public class OrderDelivery {
     @Column(name = "dropoff_address", length = 256)
     private String dropoffAddress;
 
-    /** Optional rider fee charged for this delivery. */
     @DecimalMin(value = "0.00")
     @Digits(integer = 8, fraction = 2)
     @Column(name = "fee", precision = 10, scale = 2)
     private BigDecimal fee;
 
-    /** Domain state (guarded as read-only over JSON; change via command endpoints). */
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 16)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private DeliveryStatus status = DeliveryStatus.UNASSIGNED;
 
-    /**
-     * Association is READ-ONLY over JSON; use /api/deliveries/{id}/assign to change.
-     * Use LAZY to avoid n+1 and heavy HAL payloads.
-     */
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "rider_id")
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Rider rider;
 
-    /** Timestamps for traceability */
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private Instant createdAt;
@@ -70,21 +68,17 @@ public class OrderDelivery {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    /** Business timestamps for lifecycle */
     @Column(name = "assigned_at")
     private Instant assignedAt;
 
     @Column(name = "delivered_at")
     private Instant deliveredAt;
 
-    /** Optional optimistic lock to prevent concurrent overwrites */
     @Version
     @Column(name = "version", nullable = false)
     private long version;
 
     public OrderDelivery() {}
-
-    // Getters / Setters
 
     public Long getId() { return id; }
 
@@ -102,15 +96,10 @@ public class OrderDelivery {
 
     public DeliveryStatus getStatus() { return status; }
 
-    /**
-     * Intentionally package-private to discourage direct mutation outside command handlers.
-     * Changes should happen via your DeliveryCommandController (assign / status endpoints).
-     */
     public void setStatus(DeliveryStatus status) { this.status = status; }
 
     public Rider getRider() { return rider; }
 
-    /** Same rationale as setStatus: command endpoint should manage this. */
     public void setRider(Rider rider) { this.rider = rider; }
 
     public Instant getCreatedAt() { return createdAt; }

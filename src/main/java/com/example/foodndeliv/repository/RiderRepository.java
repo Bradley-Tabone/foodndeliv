@@ -18,14 +18,11 @@ import java.util.Optional;
 )
 public interface RiderRepository extends JpaRepository<Rider, Long> {
 
-    // Exposed as: /api/riders/search/by-status?status=ACTIVE
     @RestResource(path = "by-status", rel = "by-status")
     Page<Rider> findByStatus(@Param("status") RiderStatus status, Pageable pageable);
 
-    // Handy lookup (appears under /api/riders/search/findByPhone?phone=...)
     Optional<Rider> findByPhone(@Param("phone") String phone);
 
-    /* --- Preserve history: disable DELETE over REST --- */
     @Override @RestResource(exported = false)
     void deleteById(Long id);
 
@@ -34,8 +31,4 @@ public interface RiderRepository extends JpaRepository<Rider, Long> {
 
     @Override @RestResource(exported = false)
     void deleteAll();
-
-    // (Optional) also block these if your Spring Data version exposes them over REST
-    // @Override @RestResource(exported = false) void deleteAll(Iterable<? extends Rider> entities);
-    // @Override @RestResource(exported = false) void deleteAllInBatch();
 }

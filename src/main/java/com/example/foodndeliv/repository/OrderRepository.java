@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.rest.core.annotation.RestResource;
+import java.util.Optional;
 
 import java.util.List;
 
@@ -27,10 +28,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o FROM Order o WHERE o.customer.id = :custID AND o.restaurant.id = :restID")
     List<Order> findOrdersByCustRestID(@Param("custID") Long custID, @Param("restID") Long restID);
 
-    @RestResource(exported = false) // hide from Spring Data REST since KrakenD will handle it
+    @RestResource(exported = false)
+    @Query("select o from Order o where o.customer.name = :name")
     List<Order> findByCustomerName(@Param("name") String name);
 
-    // Prevent DELETE via REST
     @Override
     @RestResource(exported = false)
     default void deleteById(Long id) {
